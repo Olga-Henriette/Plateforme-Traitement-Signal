@@ -15,7 +15,7 @@ Interface interactive pour 5 cas pratiques de traitement du signal :
 ## Installation
 1. Cloner le dépôt
 2. Ouvrir Scilab
-3. Exécuter : `exec('src/interface_principale.sce')`
+3. Exécuter : `exec('src/main.sci')`
 
 ## Auteur
 Olga Henriette VOLANIAINA
