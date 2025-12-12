@@ -1,41 +1,41 @@
-
 // =========================================================================
-// Fonctions mathématiques utilitaires
+// MATH_UTILS.SCI - Fonctions mathématiques génériques
 // =========================================================================
 
-function [val_max, idx_max] = trouver_maximum(vecteur)
-    // Trouve le maximum et son indice
-    // Compatible Scilab (pas de syntaxe MATLAB [~, idx])
-    val_max = max(vecteur);
-    idx_max = find(vecteur == val_max);
-    idx_max = idx_max(1); // Prendre le premier si plusieurs
+function [max_value, max_index] = find_maximum(vector) // trouver_maximum
+    // Retourne la valeur maximale et l'index de la première occurrence
+    max_value = max(vector);
+    max_index = find(vector == max_value, 1);
 endfunction
 
-function [val_min, idx_min] = trouver_minimum(vecteur)
-    // Trouve le minimum et son indice
-    val_min = min(vecteur);
-    idx_min = find(vecteur == val_min);
-    idx_min = idx_min(1);
+function output = modulo(a, b)
+    % Calcule le modulo (reste de la division euclidienne)
+    output = a - b * floor(a/b);
 endfunction
 
-function resultat = calculer_mse(signal1, signal2)
-    // Calcule l'erreur quadratique moyenne
-    resultat = mean((double(signal1(:)) - double(signal2(:))).^2);
+// Note: calculer_mse est déplacée ici depuis le module image
+function mse = calculate_mse(img1, img2) // calculer_mse 
+    // Mean Squared Error (Erreur Quadratique Moyenne)
+    diff_img = double(img1) - double(img2);
+    mse = mean(diff_img.^2);
 endfunction
 
-function resultat = calculer_snr(signal, bruit)
-    // Calcule le rapport signal sur bruit
-    puissance_signal = mean(signal.^2);
-    puissance_bruit = mean(bruit.^2);
-    resultat = 10 * log10(puissance_signal / puissance_bruit);
-endfunction
-
-function normalise = normaliser_signal(signal)
-    // Normalise un signal entre -1 et 1
-    normalise = signal / max(abs(signal));
-endfunction
-
-function resultat = calculer_correlation(signal1, signal2)
-    // Calcule la corrélation croisée
-    resultat = xcorr(signal1, signal2);
+// Note: calculate_snr est déplacée ici depuis le module audio
+function snr_db = calculate_snr(clean_signal, noisy_signal) // calculer_snr
+    % Calcul du rapport Signal sur Bruit (SNR) en dB
+    
+    % Erreur (Bruit) = Signal Bruité - Signal Propre
+    noise = noisy_signal - clean_signal;
+    
+    % Puissance du signal propre
+    signal_power = mean(clean_signal.^2);
+    
+    % Puissance du bruit
+    noise_power = mean(noise.^2);
+    
+    if signal_power > 1e-10 & noise_power > 1e-10 then
+        snr_db = 10 * log10(signal_power / noise_power);
+    else
+        snr_db = 999; // Valeur très haute si pas de bruit ou pas de signal
+    end
 endfunction

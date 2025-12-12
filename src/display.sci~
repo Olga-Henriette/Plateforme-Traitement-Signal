@@ -1,5 +1,5 @@
 // =========================================================================
-// DISPLAY.SCI - Fonctions d'affichage des graphiques et des messages
+// Fonctions d'affichage des graphiques et des messages
 // =========================================================================
 
 function create_results_figure(title_string, figure_number)
@@ -20,16 +20,14 @@ function create_results_figure(title_string, figure_number)
                             
     app_state.figure_results = figure_handle;
     
-    // CORRECTION CRITIQUE (Correction 3): Forcer le rafraîchissement de l'interface
+    // Forcer le rafraîchissement de l'interface
     // Ceci s'assure que la fenêtre de résultats est bien ouverte avant que les
     // calculs lourds ne bloquent l'UI principale.
     drawnow(); 
 endfunction
 
-// --- Fonctions d'Affichage Spécifiques (Adaptées du code fourni précédemment) ---
-
 function show_audio_results(time, original_signal, noisy_signal, filtered_signal, freq_fft, fft_noisy, fft_filtered)
-    // fonction d'affichage pour le module Audio (process_audio.sci)
+    // fonction d'affichage pour le module Audio 
     create_results_figure('Theme 1 : Audio - Resultats du Filtrage', 1);
 
     subplot(3, 2, [1, 3]);
@@ -56,8 +54,8 @@ function show_audio_results(time, original_signal, noisy_signal, filtered_signal
     xgrid();
 endfunction
 
-function show_image_results(img_orig, img_noisy, img_denoised, img_sharpened) // afficher_resultats_image
-    // fonction d'affichage pour le module Image (process_image.sci)
+function show_image_results(img_orig, img_noisy, img_denoised, img_sharpened) 
+    // fonction d'affichage pour le module Image 
     create_results_figure('Theme 2 : Image Medicale - Amelioration', 2);
     
     // Les fonctions de base Scilab pour l'image sont 'imshow' ou 'xset("colormap",...) + grayplot'
@@ -92,7 +90,7 @@ function show_image_results(img_orig, img_noisy, img_denoised, img_sharpened) //
     histplot(0:255, img_sharpened(:));
     title('Histogramme - Traitee');
 
-    // NOTE: Il faut s'assurer que les images sont au bon format (e.g., uint8) pour imshow.
+    // Il faut s'assurer que les images sont au bon format (e.g., uint8) pour imshow.
 endfunction
 
 function show_ecg_results(time_vector, noisy_ecg, filtered_ecg, peak_times, peak_positions, mean_hr) // afficher_resultats_ecg
@@ -118,8 +116,7 @@ function show_ecg_results(time_vector, noisy_ecg, filtered_ecg, peak_times, peak
     xgrid();
 endfunction
 
-function show_radar_results(time_vector, transmitted_signal, received_signal_noisy, lag_vector, correlation_vector, estimated_delay, estimated_distance) // afficher_resultats_radar
-    // fonction d'affichage pour le module Radar (process_radar.sci)
+function show_radar_results(time_vector, transmitted_signal, received_signal_noisy, lag_vector, correlation_vector, estimated_delay, estimated_distance)
     create_results_figure('Theme 4 : Radar - Estimation de Distance', 4);
     
     subplot(3,1,1);
@@ -139,8 +136,13 @@ function show_radar_results(time_vector, transmitted_signal, received_signal_noi
     subplot(3,1,3);
     plot(lag_vector, correlation_vector, 'g');
     
-    // Trouver le maximum pour placer le marqueur
-    [max_value_plot, ~] = trouver_maximum(correlation_vector); 
+    // CORRECTION: En Scilab, ne pas utiliser ~ pour ignorer des valeurs
+    // Option 1: Récupérer toutes les valeurs
+    [max_value_plot, idx_max] = trouver_maximum(correlation_vector);
+    
+    // Ou Option 2 (plus simple): Utiliser directement max()
+    // max_value_plot = max(correlation_vector);
+    
     plot(estimated_delay, max_value_plot, 'ro', 'MarkerSize', 8);
     
     xlabel('Retard (s)');
@@ -179,6 +181,3 @@ function show_radio_results(transmitted_bits, received_bits, modulated_signal, f
     ylim([-0.2, 1.2]);
     legend('Recus corrects', 'Recus errones');
 endfunction
-
-// NOTE: Les fonctions tracer_image, tracer_histogramme, trouver_maximum sont supposées
-// être définies dans les fichiers Utils et Image si elles sont manquantes.

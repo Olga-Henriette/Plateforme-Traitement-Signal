@@ -1,8 +1,48 @@
 // =========================================================================
-// EVENTS.SCI - Gestion des evenements utilisateur
+// Gestion des evenements utilisateur
 // =========================================================================
 
-function event_theme_change() // evenement_changement_theme
+// --- Fonction Helper pour accéder aux modules ---
+function module_config = get_module_config(theme_key)
+    global app_state;
+    
+    select theme_key
+        case 'audio' then
+            module_config = app_state.modules.audio;
+        case 'image' then
+            module_config = app_state.modules.image;
+        case 'ecg' then
+            module_config = app_state.modules.ecg;
+        case 'radar' then
+            module_config = app_state.modules.radar;
+        case 'radio' then
+            module_config = app_state.modules.radio;
+        else
+            error('Theme inconnu: ' + theme_key);
+    end
+endfunction
+
+// --- Fonction Helper pour modifier un module ---
+function set_module_config(theme_key, module_config)
+    global app_state;
+    
+    select theme_key
+        case 'audio' then
+            app_state.modules.audio = module_config;
+        case 'image' then
+            app_state.modules.image = module_config;
+        case 'ecg' then
+            app_state.modules.ecg = module_config;
+        case 'radar' then
+            app_state.modules.radar = module_config;
+        case 'radio' then
+            app_state.modules.radio = module_config;
+        else
+            error('Theme inconnu: ' + theme_key);
+    end
+endfunction
+
+function event_theme_change() 
     global app_state;
     
     try
@@ -11,7 +51,7 @@ function event_theme_change() // evenement_changement_theme
             return;
         end
         
-        popup_handle = app_state.ui_elements.popup_theme; // h
+        popup_handle = app_state.ui_elements.popup_theme;
         selected_index = get(popup_handle, 'value');
         
         // Mettre à jour la clé du thème actuel
@@ -26,7 +66,7 @@ function event_theme_change() // evenement_changement_theme
     end
 endfunction
 
-function event_generate_results() // evenement_generer_resultats
+function event_generate_results()
     global app_state;
     
     try
@@ -40,13 +80,14 @@ function event_generate_results() // evenement_generer_resultats
         update_interpretation_zone('Generation en cours...');
         
         // 2. Appeler dynamiquement la fonction de traitement
-        module_config = app_state.modules.(current_key);
+        // CORRECTION: Utiliser la fonction helper
+        module_config = get_module_config(current_key);
         process_function_name = module_config.process_function;
         
         disp('Lancement traitement : ' + process_function_name + '()...');
         
-        // Utilisation de feval pour appeler la fonction dont le nom est une chaîne de caractères
-        feval(process_function_name); 
+        // Utilisation de execstr au lieu de feval
+        execstr(process_function_name + '()'); 
         
         disp('=== DEBUG : Fin generation ===');
         
@@ -67,40 +108,44 @@ function event_generate_results() // evenement_generer_resultats
     end
 endfunction
 
-function read_interface_parameters() // lire_parametres_interface
+function read_interface_parameters()
     global app_state;
     
     current_key = app_state.current_theme_key;
-    module_config = app_state.modules.(current_key);
     
-    // Créer une copie des paramètres par défaut qui sera modifiée
+    // CORRECTION: Utiliser la fonction helper
+    module_config = get_module_config(current_key);
+    
+    // Créer une copie des paramètres par défaut
     current_params = module_config.default_params;
     
     // Parcourir les paramètres par clé et lire leur valeur dans l'UI
-    param_names = struct_fieldnames(current_params);
+    param_names = fieldnames(current_params);
     
-    for i = 1:length(param_names)
+    for i = 1:size(param_names, 1)
         param_key = param_names(i);
         
-        // Lire la valeur du champ de saisie correspondant à la clé
+        // Lire la valeur du champ de saisie
         value = read_parameter_value(param_key); 
         
-        // Cas spécial : Le bruit pour l'image est en % dans l'UI, mais en facteur (0-1) dans les params
+        // Le bruit pour l'image est en % dans l'UI, mais en facteur (0-1) dans les params
         if current_key == 'image' & param_key == 'salt_pepper_noise_percent' then
             value = value / 100;
-            param_key = 'noise_level_factor'; // On stocke la valeur dans la bonne clé du module
+            param_key_to_set = 'noise_level_factor';
+        else
+            param_key_to_set = param_key;
         end
         
-        // Mettre à jour la structure des paramètres par défaut
-        module_config.default_params.(param_key) = value;
+        // CORRECTION: Utiliser execstr pour modifier le paramètre
+        execstr("module_config.default_params." + param_key_to_set + " = value;");
     end
     
-    // Stocker la version modifiée des paramètres par défaut dans l'état global
-    app_state.modules.(current_key) = module_config;
+    // CORRECTION: Stocker avec la fonction helper
+    set_module_config(current_key, module_config);
 endfunction
 
-function value = read_parameter_value(tag) // lire_valeur
-    handle = findobj('tag', 'param_' + tag); // h
+function value = read_parameter_value(tag) 
+    handle = findobj('tag', 'param_' + tag);
     if isempty(handle) then
         disp('Attention : parametre ' + tag + ' non trouve');
         value = 0;
@@ -114,14 +159,13 @@ function value = read_parameter_value(tag) // lire_valeur
     end
 endfunction
 
-function update_interpretation_zone(text) // mettre_a_jour_interpretation
+function update_interpretation_zone(text)
     global app_state;
     
     try
         zone_handle = app_state.ui_elements.interpretation_zone;
         if ~isempty(zone_handle) then
             set(zone_handle, 'string', text);
-            // Ajouter drawnow() pour forcer la mise à jour immédiate
             drawnow(); 
         else
             disp('Interpretation : ' + text);
