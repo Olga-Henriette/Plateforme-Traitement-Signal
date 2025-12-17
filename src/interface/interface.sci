@@ -1,7 +1,3 @@
-// =========================================================================
-// SYNCHRONISATION POSITIONS CORRIGÉE
-// =========================================================================
-
 function module_config = get_module_config(theme_key)
     global app_state;
     
@@ -136,26 +132,42 @@ function create_graphics_panel()
     global app_state;
     lay = app_state.layout;
     
+    // Calculer position
+    fig_pos = get(app_state.figure_interface, 'position');
+    fig_w = fig_pos(3);
+    fig_h = fig_pos(4);
+    
+    y_top = fig_h - lay.margin - lay.title_height;
+    y_selector = y_top;
+    y_panels_top = y_selector - lay.selector_height - lay.small_space;
+    y_panels_bottom = lay.margin + lay.interp_height + lay.margin;
+    panels_height = y_panels_top - y_panels_bottom;
+    
     x_graph_start = lay.margin + lay.params_width + lay.margin;
+    graph_width = fig_w - x_graph_start - lay.margin;
     
     frame_x = x_graph_start - 15;
-    frame_y = 80 - 10;  
-    frame_w = 850 + 24;
-    frame_h = 500;
+    frame_y = y_panels_bottom - 10;
+    frame_w = graph_width + 24;
+    frame_h = panels_height;
     
+    // Frame gris (sera rendu invisible lors de la génération)
     h_frame = uicontrol(app_state.figure_interface, 'style', 'frame', ...
               'position', [frame_x, frame_y, frame_w, frame_h], ...
               'background', [0.92 0.92 0.92], ...
               'relief', 'sunken', ...
+              'visible', 'on', ...
               'tag', 'panel_graphics_zone');
     
     app_state.ui_elements.graphics_frame = h_frame;
     
+    // Sauvegarder la position pour les graphiques
     app_state.graphics_zone_position = [frame_x, frame_y, frame_w, frame_h];
-    
+        
+    // Titre
     uicontrol(app_state.figure_interface, 'style', 'text', ...
               'string', 'ZONE D''AFFICHAGE DES GRAPHIQUES', ...
-              'position', [frame_x + lay.padding, 545, frame_w - 2*lay.padding, 30], ...
+              'position', [frame_x + lay.padding, frame_y + frame_h - 35, frame_w - 2*lay.padding, 30], ...
               'fontsize', 12, ...
               'fontweight', 'bold', ...
               'background', [0.3 0.5 0.8], ...
@@ -163,9 +175,10 @@ function create_graphics_panel()
               'horizontalalignment', 'center', ...
               'tag', 'graphics_title_text');
     
+    // Message placeholder
     h_msg = uicontrol(app_state.figure_interface, 'style', 'text', ...
               'string', 'Les graphiques s''afficheront ici...', ...
-              'position', [frame_x + 50, 300, frame_w - 100, 40], ...
+              'position', [frame_x + 50, frame_y + frame_h/2 - 20, frame_w - 100, 40], ...
               'fontsize', 12, ...
               'background', [0.92 0.92 0.92], ...
               'foreground', [0.5 0.5 0.5], ...
@@ -344,7 +357,7 @@ function resize_interface()
         set(app_state.ui_elements.button_generate, 'position', [5, y_panels_bottom - 5, lay.params_width - 4*lay.padding, lay.button_height]);
     end
     
-    // ZONE GRAPHIQUE
+    // ZONE GRAPHIQUE - Position calculée
     graph_width = fig_w - x_graph_start - lay.margin;
     
     frame_x = x_graph_start - 15;
@@ -352,12 +365,12 @@ function resize_interface()
     frame_w = graph_width + 24;
     frame_h = panels_height;
     
-    // Mettre à jour le frame UI
+    // Mettre à jour le frame
     if ~isempty(app_state.ui_elements.graphics_frame) then
         set(app_state.ui_elements.graphics_frame, 'position', [frame_x, frame_y, frame_w, frame_h]);
     end
     
-    // SYNCHRONISATION : Utiliser EXACTEMENT la même position pour les graphiques
+    // SYNCHRONISER la position pour les graphiques
     app_state.graphics_zone_position = [frame_x, frame_y, frame_w, frame_h];
     
     h = findobj(fig, 'tag', 'graphics_title_text');
